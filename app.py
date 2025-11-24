@@ -1,129 +1,63 @@
-from dotenv import load_dotenv
+import streamlit as st
 from openai import OpenAI
-import json
-import os
-import requests
 from pypdf import PdfReader
-import gradio as gr
 
+# --- Read profile from PDF ---
+def get_profile_text(pdf_path):
+    reader = PdfReader(pdf_path)
+    text = ""
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text + "\n"
+    return text
 
-load_dotenv(override=True)
-openai = OpenAI()
-#openai = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+PROFILE_TEXT = get_profile_text("Profile.pdf")
 
-def push(text):
-    requests.post(
-        "https://api.pushover.net/1/messages.json",
-        data={
-            "token": os.getenv("PUSHOVER_TOKEN"),   # Your Pushover Application Token
-            "user": os.getenv("PUSHOVER_USER"),     # Your Pushover User Token
-            "message": text,
-        }
+# --- Build agent system prompt ---
+def build_system_prompt(profile_text):
+    return (
+        "You are acting as Alessandro Frullani's agent. You answer questions about Alessandro's career, background, skills, and experience. "
+        "Be professional and engaging, as if talking to a potential client or recruiter who visited his profile. "
+        "Use the information from the user's profile below to answer questions as accurately as possible. "
+        "If you don't know the answer, say so politely, and encourage the user to provide their email if they wish to connect.\n\n"
+        "### Profile Information ###\n"
+        + profile_text
     )
 
+st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
+st.title("Chat with Alessandro Frullani's Agent")
+st.markdown("## Professional Profile (for agent context only)")
 
-def record_user_details(email, name="Name not provided", notes="not provided"):
-    push(f"Recording {name} with email {email} and notes {notes}")
-    return {"recorded": "ok"}
+# You may choose to show just a teaser of your profile, or hide it
+st.markdown(PROFILE_TEXT[:600])
 
-def record_unknown_question(question):
-    push(f"Recording {question}")
-    return {"recorded": "ok"}
+API_KEY = st.secrets["OPENAI_API_KEY"]
+openai = OpenAI(api_key=API_KEY)
 
-record_user_details_json = {
-    "name": "record_user_details",
-    "description": "Use this tool to record that a user is interested in being in touch and provided an email address",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "email": {
-                "type": "string",
-                "description": "The email address of this user"
-            },
-            "name": {
-                "type": "string",
-                "description": "The user's name, if they provided it"
-            }
-            ,
-            "notes": {
-                "type": "string",
-                "description": "Any additional information about the conversation that's worth recording to give context"
-            }
-        },
-        "required": ["email"],
-        "additionalProperties": False
-    }
-}
+if "history" not in st.session_state:
+    st.session_state["history"] = []
 
-record_unknown_question_json = {
-    "name": "record_unknown_question",
-    "description": "Always use this tool to record any question that couldn't be answered as you didn't know the answer",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "question": {
-                "type": "string",
-                "description": "The question that couldn't be answered"
-            },
-        },
-        "required": ["question"],
-        "additionalProperties": False
-    }
-}
+user_input = st.text_input("Type your question for Alessandro's agent:")
 
-tools = [{"type": "function", "function": record_user_details_json},
-        {"type": "function", "function": record_unknown_question_json}]
+if user_input:
+    system_prompt = build_system_prompt(PROFILE_TEXT)
+    messages = [{"role": "system", "content": system_prompt}]
+    for turn in st.session_state["history"]:
+        messages.append({"role": "user", "content": turn["user"]})
+        messages.append({"role": "assistant", "content": turn["agent"]})
+    messages.append({"role": "user", "content": user_input})
 
+    response = openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=messages
+    )
+    agent_reply = response.choices[0].message.content
+    st.write("Agent:", agent_reply)
+    st.session_state["history"].append({"user": user_input, "agent": agent_reply})
 
-class Me:
-
-    def __init__(self):
-        self.openai = OpenAI()
-        self.name = "Alessandro Frullani"
-        reader = PdfReader("Profile.pdf")
-        self.linkedin = ""
-        for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                self.linkedin += text
-        #with open("me/summary.txt", "r", encoding="utf-8") as f:
-            #self.summary = f.read()
-
-
-    def handle_tool_call(self, tool_calls):
-        results = []
-        for tool_call in tool_calls:
-            tool_name = tool_call.function.name
-            arguments = json.loads(tool_call.function.arguments)
-            print(f"Tool called: {tool_name}", flush=True)
-            tool = globals().get(tool_name)
-            result = tool(**arguments) if tool else {}
-            results.append({"role": "tool","content": json.dumps(result),"tool_call_id": tool_call.id})
-        return results
-    
-    def system_prompt(self):
-        system_prompt = f"You are acting as {self.name}. You are answering questions on {self.name}, particularly questions related to {self.name}'s career, background, skills and experience. Your responsibility is to represent {self.name} for interactions on the website as faithfully as possible. You are given a pdf document containing a complete profile of {self.name}'s background and interests which you can use to answer questions. Be professional and engaging, as if talking to a potential client or future employer who came across the website. If you don't know the answer to any question, use your record_unknown_question tool to record the question that you couldn't answer, even if it's about something trivial or unrelated to career. If the user is engaging in discussion, try to steer them towards getting in touch via email; ask for their email and record it using your record_user_details tool. "
-        #system_prompt += f"\n\n## Summary:\n{self.summary}\n\n## LinkedIn Profile:\n{self.linkedin}\n\n"
-        system_prompt += f"\n\n## Profile from PDF:\n{self.linkedin}\n\n"
-        system_prompt += f"With this context, please chat with the user, always staying in character as {self.name}."
-        return system_prompt
-    
-    def chat(self, message, history):
-        messages = [{"role": "system", "content": self.system_prompt()}] + history + [{"role": "user", "content": message}]
-        done = False
-        while not done:
-            response = self.openai.chat.completions.create(model="gpt-4o-mini", messages=messages, tools=tools)
-            if response.choices[0].finish_reason=="tool_calls":
-                message = response.choices[0].message
-                tool_calls = message.tool_calls
-                results = self.handle_tool_call(tool_calls)
-                messages.append(message)
-                messages.extend(results)
-            else:
-                done = True
-        return response.choices[0].message.content
-    
-
-if __name__ == "__main__":
-    me = Me()
-    gr.ChatInterface(me.chat, type="messages").launch(share=True)
+if st.session_state["history"]:
+    st.subheader("Conversation History")
+    for h in st.session_state["history"]:
+        st.write("You:", h["user"])
+        st.write("Agent:", h["agent"])
