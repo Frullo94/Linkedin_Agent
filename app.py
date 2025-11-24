@@ -26,8 +26,8 @@ def build_system_prompt(profile_text):
     )
 
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
-st.title("Chat with Alessandro Frullani's Agent")
-st.markdown("## Professional Profile (for agent context only)")
+st.title("Chat with Alessandro' s Agent")
+#st.markdown("## Professional Profile (for agent context only)")
 
 # You may choose to show just a teaser of your profile, or hide it
 st.markdown(PROFILE_TEXT[:600])
