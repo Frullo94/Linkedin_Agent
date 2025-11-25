@@ -42,7 +42,7 @@ openai = OpenAI(api_key=API_KEY)
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
 
-# Display full chat sequence as in Perplexity
+# Display all messages (user and agent)
 for msg in st.session_state["chat_history"]:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
