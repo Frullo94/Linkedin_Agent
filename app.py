@@ -2,7 +2,6 @@ import streamlit as st
 from openai import OpenAI
 from pypdf import PdfReader
 
-# --- Read profile from PDF ---
 def get_profile_text(pdf_path):
     reader = PdfReader(pdf_path)
     text = ""
@@ -14,50 +13,47 @@ def get_profile_text(pdf_path):
 
 PROFILE_TEXT = get_profile_text("Profile.pdf")
 
-# --- Build agent system prompt ---
 def build_system_prompt(profile_text):
     return (
-        "You are acting as Alessandro Frullani's agent. You answer questions about Alessandro's career, background, skills, and experience. "
-        "Be professional and engaging, as if talking to a potential client or recruiter who visited his profile. "
-        "Use the information from the user's profile below to answer questions as accurately as possible. "
-        "If you don't know the answer, say so politely, and encourage the user to provide their email if they wish to connect.\n\n"
+        "You are acting as Alessandro Frullani's agent. Answer questions about his career, background, skills, and experience. "
+        "Be professional and engaging; use the profile below for fact-based answers. "
+        "If unsure, say so politely and invite the user to connect via email.\n\n"
         "### Profile Information ###\n"
         + profile_text
     )
 
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
-st.title("Chat with Alessandro' s Agent")
-#st.markdown("## Professional Profile (for agent context only)")
-
-# You may choose to show just a teaser of your profile, or hide it
-st.markdown(PROFILE_TEXT[:600])
+st.title("Chat with Alessandro's Agent")
 
 API_KEY = st.secrets["OPENAI_API_KEY"]
 openai = OpenAI(api_key=API_KEY)
 
-if "history" not in st.session_state:
-    st.session_state["history"] = []
+if "chat_history" not in st.session_state:
+    st.session_state["chat_history"] = []
 
-user_input = st.text_input("Type your question for Alessandro's agent:")
+# Display full flowing chat, oldest at top
+for msg in st.session_state["chat_history"]:
+    with st.chat_message(msg['role']):
+        st.markdown(msg['content'])
+
+user_input = st.chat_input("Type your message here...")
 
 if user_input:
-    system_prompt = build_system_prompt(PROFILE_TEXT)
-    messages = [{"role": "system", "content": system_prompt}]
-    for turn in st.session_state["history"]:
-        messages.append({"role": "user", "content": turn["user"]})
-        messages.append({"role": "assistant", "content": turn["agent"]})
-    messages.append({"role": "user", "content": user_input})
+    # Add user input
+    st.session_state["chat_history"].append({"role": "user", "content": user_input})
+
+    # Compose chat with system prompt and history
+    messages = [{"role": "system", "content": build_system_prompt(PROFILE_TEXT)}]
+    for msg in st.session_state["chat_history"]:
+        messages.append({"role": msg["role"], "content": msg["content"]})
 
     response = openai.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages
     )
     agent_reply = response.choices[0].message.content
-    st.write("Agent:", agent_reply)
-    st.session_state["history"].append({"user": user_input, "agent": agent_reply})
 
-if st.session_state["history"]:
-    st.subheader("Conversation History")
-    for h in st.session_state["history"]:
-        st.write("You:", h["user"])
-        st.write("Agent:", h["agent"])
+    # Add agent response and instantly show it
+    st.session_state["chat_history"].append({"role": "assistant", "content": agent_reply})
+    with st.chat_message("assistant"):
+        st.markdown(agent_reply)
