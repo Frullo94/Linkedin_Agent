@@ -18,6 +18,8 @@ def build_system_prompt(profile_text):
     return (
         "You are acting as Alessandro Frullani's agent. Answer questions about Alessandro's career, background, skills, and experience. "
         "Be professional and engaging; use the profile below for fact-based answers. "
+        "Be polite and ask 
+        "If the user asks how to contact Alessandro, provide the professional email: alessandro.frullani@email.com. "
         "If unsure, say so politely and invite the user to connect via email.\n\n"
         "### Profile Information ###\n"
         + profile_text
@@ -32,7 +34,15 @@ def notify_pushover(message):
             "message": message,
         }
     )
+    
+if "started" not in st.session_state:
+    st.session_state["started"] = False
 
+user_input = st.chat_input("Type your message here...")
+
+if user_input and not st.session_state["started"]:
+    notify_pushover("A new recruiter has started a chat session with Alessandro's Agent!")
+    st.session_state["started"] = True
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
 st.title("Chat with Alessandro Frullani's Agent")
 
