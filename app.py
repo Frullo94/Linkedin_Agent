@@ -40,7 +40,7 @@ if "started" not in st.session_state:
 user_input = st.chat_input("Type your message here...")
 
 if user_input and not st.session_state["started"]:
-    notify_pushover("A new recruiter has started a chat session with Alessandro's Agent!")
+    notify_pushover("Someone has started a chat session with Alessandro's Agent!")
     st.session_state["started"] = True
 
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
