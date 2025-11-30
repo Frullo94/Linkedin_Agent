@@ -7,10 +7,12 @@ import os
 os.environ["STREAMLIT_WATCH_FILE_CHANGES"] = "false"
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 API_KEY = st.secrets["OPENAI_API_KEY"]
-client = OpenAI()
+# client = OpenAI()
 
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
 st.title("Chat with Alessandro Frullani's Agent")
+
+openai = OpenAI(api_key=API_KEY)
 
 def get_profile_text(pdf_path):
     reader = PdfReader(pdf_path)
@@ -52,11 +54,6 @@ if user_input and not st.session_state["started"]:
     notify_pushover("Someone has started a chat session with Alessandro's Agent!")
     st.session_state["started"] = True
 
-#st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
-#st.title("Chat with Alessandro Frullani's Agent")
-
-# API_KEY = st.secrets["OPENAI_API_KEY"]
-# openai = OpenAI(api_key=API_KEY)
 
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
