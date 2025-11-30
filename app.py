@@ -5,10 +5,10 @@ import requests
 import os
 
 os.environ["STREAMLIT_WATCH_FILE_CHANGES"] = "false"
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
-API_KEY = st.secrets["OPENAI_API_KEY"]
-client = OpenAI()
-
+#os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+#API_KEY = st.secrets["OPENAI_API_KEY"]
+#client = OpenAI()
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
 st.title("Chat with Alessandro Frullani's Agent")
 
