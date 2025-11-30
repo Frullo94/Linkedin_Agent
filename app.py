@@ -7,7 +7,7 @@ import os
 os.environ["STREAMLIT_WATCH_FILE_CHANGES"] = "false"
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 API_KEY = st.secrets["OPENAI_API_KEY"]
-# client = OpenAI()
+client = OpenAI()
 
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
 st.title("Chat with Alessandro Frullani's Agent")
@@ -71,7 +71,7 @@ if user_input:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
     response = openai.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         messages=messages
     )
     agent_reply = response.choices[0].message.content
