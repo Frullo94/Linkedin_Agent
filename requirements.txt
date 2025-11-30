@@ -1,4 +1,4 @@
-streamlit
 openai==1.55.0
+streamlit
 pypdf
 requests
