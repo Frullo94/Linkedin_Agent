@@ -12,7 +12,7 @@ API_KEY = st.secrets["OPENAI_API_KEY"]
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
 st.title("Chat with Alessandro Frullani's Agent")
 
-openai = OpenAI(api_key=API_KEY)
+# openai = OpenAI(api_key=API_KEY)
 
 def get_profile_text(pdf_path):
     reader = PdfReader(pdf_path)
