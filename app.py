@@ -2,6 +2,12 @@ import streamlit as st
 from openai import OpenAI
 from pypdf import PdfReader
 import requests
+import os
+
+os.environ["STREAMLIT_WATCH_FILE_CHANGES"] = "false"
+os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+API_KEY = st.secrets["OPENAI_API_KEY"]
+client = OpenAI()
 
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
 st.title("Chat with Alessandro Frullani's Agent")
@@ -49,8 +55,8 @@ if user_input and not st.session_state["started"]:
 #st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
 #st.title("Chat with Alessandro Frullani's Agent")
 
-API_KEY = st.secrets["OPENAI_API_KEY"]
-openai = OpenAI(api_key=API_KEY)
+# API_KEY = st.secrets["OPENAI_API_KEY"]
+# openai = OpenAI(api_key=API_KEY)
 
 if "chat_history" not in st.session_state:
     st.session_state["chat_history"] = []
@@ -80,8 +86,8 @@ if user_input:
     # Notify for recruiter intent (email
 # Detect if recruiter provides an email/contact detail
     if ("contact" in agent_reply.lower() or "email" in agent_reply.lower()) and "@" in user_input:
-        notify_pushover(f"Recruiter wants to reach out: {user_input}")
+        notify_pushover(f"Someone wants to reach out: {user_input}")
     # Notify if recruiter asks odd/personal questions (add more as needed)
     if any(keyword in user_input.lower() for keyword in ["height", "weight", "age"]):
-        notify_pushover(f"Recruiter asked odd question: {user_input}")
+        notify_pushover(f"Someone asked odd question: {user_input}")
 
