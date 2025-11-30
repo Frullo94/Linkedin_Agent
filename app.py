@@ -3,6 +3,9 @@ from openai import OpenAI
 from pypdf import PdfReader
 import requests
 
+st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
+st.title("Chat with Alessandro Frullani's Agent")
+
 def get_profile_text(pdf_path):
     reader = PdfReader(pdf_path)
     text = ""
@@ -43,8 +46,8 @@ if user_input and not st.session_state["started"]:
     notify_pushover("Someone has started a chat session with Alessandro's Agent!")
     st.session_state["started"] = True
 
-st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
-st.title("Chat with Alessandro Frullani's Agent")
+#st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
+#st.title("Chat with Alessandro Frullani's Agent")
 
 API_KEY = st.secrets["OPENAI_API_KEY"]
 openai = OpenAI(api_key=API_KEY)
