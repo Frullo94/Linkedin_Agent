@@ -10,6 +10,7 @@ os.environ["STREAMLIT_WATCH_FILE_CHANGES"] = "false"
 #client = OpenAI()
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
+st.write("")  # Forces HF to render top content
 st.title("Chat with Alessandro Frullani's Agent")
 
 # openai = OpenAI(api_key=API_KEY)
