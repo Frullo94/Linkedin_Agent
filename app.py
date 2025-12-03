@@ -10,8 +10,22 @@ os.environ["STREAMLIT_WATCH_FILE_CHANGES"] = "false"
 #client = OpenAI()
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 st.set_page_config(page_title="Alessandro Frullani Agent", layout="centered")
-st.write("")  # Forces HF to render top content
-st.title("Chat with Alessandro Frullani's Agent")
+# --- Title & Call-to-Action in the sidebar (visible inside HF Chatbot wrapper) ---
+st.sidebar.title("Chat with Alessandro Frullani's Agent")
+st.sidebar.info(
+    """
+    ### 👋 Welcome to Alessandro Frullani’s Personal Agent
+    This assistant helps you explore Alessandro’s background, professional journey, projects, and collaborations.
+
+    **How to use this space:**
+    - Ask anything about Alessandro’s experience, skills, and current work  
+    - Request his **professional email** to get in touch  
+    - Share your name + email if you'd like him to follow up directly
+
+    🚀 **Start by typing a question in the chat box below — the Agent is ready.**
+    """
+)
+# st.title("Chat with Alessandro Frullani's Agent")
 
 # openai = OpenAI(api_key=API_KEY)
 
